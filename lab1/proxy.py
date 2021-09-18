@@ -15,6 +15,7 @@ def client_thread(clientFacingSocket):
 		message = clientFacingSocket.recv(4096).decode()
 		msgElements = message.split()
 		
+		#supported request message
 		if len(msgElements) < 5 or msgElements[0].upper() != 'GET' or 'Range:' in msgElements:
 			# print("non-supported request: " , msgElements)
 			clientFacingSocket.close()
@@ -63,9 +64,12 @@ def client_thread(clientFacingSocket):
 			# ProxyServer finds a cache hit and generates a response message
 			print("served from the cache")
 			while True:
+				#reads the file stream
 				buff = f.read(4096)
 				if buff:
-					#Fill in start             # Fill in end
+					#Fill in start
+					clientFacingSocket.send(buff)
+					# Fill in end
 				else:
 					break
 
@@ -84,7 +88,9 @@ def client_thread(clientFacingSocket):
 					buff = # Fill in start             # Fill in end
 					cacheFile.write(buff)
 					if buff:
-						# Fill in start             # Fill in end
+						# Fill in start  
+						
+						           # Fill in end
 					else:
 						break
 		except:
