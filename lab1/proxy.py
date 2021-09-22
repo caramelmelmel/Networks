@@ -85,8 +85,8 @@ def client_thread(clientFacingSocket):
 			print('listening from server')    # Fill in start              # Fill in end
 			# Connect to the socket to port 80
 			# Fill in start
-			serverFacingSocket.bind((webServer,port))
-			serverFacingSocket.listen(1)
+			serverFacingSocket.connect((webServer,port))
+			serverFacingSocket.send(message.encode())
 			print('prepared to listen from server')
 
 			# Fill in end
@@ -141,7 +141,7 @@ try:
 		# Start receiving data from the client
 		clientFacingSocket, addr = welcomeSocket.accept()#Fill in start             # Fill in end
 		print('Received a connection from:', addr)
-		print(clientFacingSocket)
+		#print(clientFacingSocket)
 		# the following function starts a new thread, taking the function name as the first argument, and a tuple of arguments to the function as its second argument
 		thread.start_new_thread(client_thread, (clientFacingSocket, ))
 
@@ -149,6 +149,5 @@ except KeyboardInterrupt:
 	print('bye...')
 
 finally:
-	welcomeSocket.close()
+	clientFacingSocket.close()
 	# Fill in start             # Fill in end
-
