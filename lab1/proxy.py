@@ -6,6 +6,7 @@ import _thread as thread
 
 proxy_port=8079
 cache_directory = "./cache/"
+#print(cache_directory)
 
 def client_thread(clientFacingSocket):
 
@@ -14,9 +15,13 @@ def client_thread(clientFacingSocket):
 	try:
 		message = clientFacingSocket.recv(4096).decode()
 		msgElements = message.split()
-		
+		#print(msgElements)
+		#supported request message
+		#print('type of request is ')
+		#print(msgElements[0].upper())
 		if len(msgElements) < 5 or msgElements[0].upper() != 'GET' or 'Range:' in msgElements:
-			# print("non-supported request: " , msgElements)
+			#print("non-supported request: " , msgElements)
+			print('socket receiving from client is closing')
 			clientFacingSocket.close()
 			return
 
@@ -63,38 +68,51 @@ def client_thread(clientFacingSocket):
 			# ProxyServer finds a cache hit and generates a response message
 			print("served from the cache")
 			while True:
+				#reads the file stream
 				buff = f.read(4096)
 				if buff:
-					#Fill in start             # Fill in end
+					#Fill in start
+					clientFacingSocket.send(buff)
+					# Fill in end
 				else:
 					break
-
+	#not found in the cache
 	except FileNotFoundError as e:            
-		try:        
+		try:
+			print("the cache doesnt contain the website")        
 			# Create a socket on the proxyserver
-			serverFacingSocket = # Fill in start             # Fill in end
+			serverFacingSocket = socket(AF_INET,SOCK_STREAM) 
+			print('listening from server')    # Fill in start              # Fill in end
 			# Connect to the socket to port 80
 			# Fill in start
-
+			serverFacingSocket.connect((webServer,port))
+			serverFacingSocket.send(message.encode())
+			print('prepared to listen from server')
 
 			# Fill in end
-
+			#get from the server to the proxy server the file
 			with open(file_to_use, "wb") as cacheFile:
 				while True:
-					buff = # Fill in start             # Fill in end
+					#need to get into the buffer
+					buff =  serverFacingSocket.recv(4096)# Fill in start             # Fill in end
 					cacheFile.write(buff)
 					if buff:
-						# Fill in start             # Fill in end
+						
+						# Fill in start  
+						clientFacingSocket.send(buff)
+						           # Fill in end
 					else:
 						break
 		except:
 			print(str(sys.exc_info()[0]))                                                
 		finally:
+			serverFacingSocket.close()
 			# Fill in start             # Fill in end
 	except:
 		print(str(sys.exc_info()[0]))
 
 	finally:
+		clientFacingSocket.close()
 		# Fill in start             # Fill in end
 
 
@@ -108,11 +126,11 @@ if not os.path.exists(cache_directory):
 	os.makedirs(cache_directory)
 	
 # Create a server socket, bind it to a port and start listening
-welcomeSocket = # Fill in start             # Fill in end
+welcomeSocket = socket(AF_INET, SOCK_STREAM)# Fill in start             # Fill in end
 
 # Fill in start
-
-
+welcomeSocket.bind(("localhost",proxy_port))
+welcomeSocket.listen(1)
 # Fill in end
 
 
@@ -121,9 +139,9 @@ print('Proxy ready to serve at port', proxy_port)
 try: 
 	while True:
 		# Start receiving data from the client
-		clientFacingSocket, addr = #Fill in start             # Fill in end
-		# print('Received a connection from:', addr)
-	
+		clientFacingSocket, addr = welcomeSocket.accept()#Fill in start             # Fill in end
+		print('Received a connection from:', addr)
+		#print(clientFacingSocket)
 		# the following function starts a new thread, taking the function name as the first argument, and a tuple of arguments to the function as its second argument
 		thread.start_new_thread(client_thread, (clientFacingSocket, ))
 
@@ -131,5 +149,5 @@ except KeyboardInterrupt:
 	print('bye...')
 
 finally:
+	clientFacingSocket.close()
 	# Fill in start             # Fill in end
-
