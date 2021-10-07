@@ -1,7 +1,20 @@
-from fastapi import FastAPI
+#===================== Importing FastAPI necessary packages =============
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    status,
+    Request,
+)
 
+from src.routers import router
+
+
+import base64
+import binascii
+
+
+#------------------ FastAPI variable ----------------------------------
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return "Hello World"
+# ================= Routers inclusion from src directory ===============
+app.include_router(router)

@@ -1,0 +1,17 @@
+GET http://127.0.0.1/users HTTP/1.1
+###
+GET http://127.0.0.1/user/615dd6b4a18f3445b46f5520 HTTP/1.1
+###
+GET http://127.0.0.1/user/659321 HTTP/1.1
+###
+GET http://127.0.0.1/user/615dd6b4a18f3445b46f5520 HTTP/1.1
+
+### 4. Retrieve games sorted by price in ascending order
+GET http://127.0.0.1/users?sortBy=score HTTP/1.1
+
+### 5. Retrieve games, offseting the front by a number
+GET http://127.0.0.1/users?count=2 HTTP/1.1
+
+
+### 6. Retrieve 3 games, sorted by price and offset by 1 
+GET http://127.0.0.1/users?count=3&offset=1&sortBy=score HTTP/1.1
