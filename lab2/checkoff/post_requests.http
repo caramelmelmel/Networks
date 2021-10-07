@@ -1,0 +1,54 @@
+POST http://127.0.0.1/ HTTP/1.1
+Content-Type: application/json
+
+
+{
+  "name": "John"
+}
+
+### create
+POST http://127.0.0.1/ HTTP/1.1
+Content-Type: application/json
+
+
+{
+  "name": "Valerie"
+}
+### create
+
+POST http://127.0.0.1/ HTTP/1.1
+Content-Type: application/json
+
+
+{
+  "name": "Caramel"
+}
+
+### create
+POST http://127.0.0.1/ HTTP/1.1
+Content-Type: application/json
+
+
+{
+  "name": "Oka is my bro"
+}
+
+### create
+POST http://127.0.0.1/ HTTP/1.1
+Content-Type: application/json
+
+
+{
+  "name": "Sean"
+}
+
+### create
+POST http://127.0.0.1/ HTTP/1.1
+Content-Type: application/json
+
+
+{
+  "name": "Kenny"
+}
+
+
