@@ -18,6 +18,7 @@ class SelectiveRepeat:
     self.sender_base = 0
     self.next_sequence_number = 0
     #set the time list for each packet
+
     self.timer = [self.set_timer(-1)]*config.WINDOW_SIZE
     self.sender_buffer = [b''] * config.WINDOW_SIZE
     self.ack_list = [False] * config.WINDOW_SIZE
@@ -26,7 +27,6 @@ class SelectiveRepeat:
     self.receiver_base = 0
     self.rcv = [False] * config.WINDOW_SIZE
     self.rcv_buffer = [b''] *config.WINDOW_SIZE
-    
     self.sender_lock = threading.Lock()
 
 
@@ -55,12 +55,16 @@ class SelectiveRepeat:
     self.network_layer.send(packet) 
     #check if next seq number is in the sender window  
     if self.next_sequence_number < (self.sender_base + config.WINDOW_SIZE):
+
       count = (self.next_sequence_number - self.sender_base)% config.WINDOW_SIZE
-      if self.timer[count].is_alive(): self.timer[count].cancel()
-      self.timer[count] = self.set_timer(count)
-      self.timer[count].start()
+      print(f"The value of the offset is {count}")
+      #self.timer[count] = self.set_timer(count)
+      
       #store inside the buffer for sender to remember that the packet was sent over
       self.sender_buffer[count] = packet
+      self.ack_list[count] = False
+      self.timer[count] = self.set_timer(self.next_sequence_number)
+      self.timer[count].start()
       self.next_sequence_number += 1
     self.sender_lock.release()
     return
@@ -82,7 +86,10 @@ class SelectiveRepeat:
       util.log("Received ACK with seq # matching the end of the window: "
                  + util.pkt_to_string(msg_data) + ". Cancelling timer.")
 
-      if self.timer[count].is_alive(): self.timer[count].cancel()
+      #if self.timer[count].is_alive(): self.timer[count].cancel()
+      
+      self.ack_list[count] = True
+      self.timer[count].cancel()
       self.timer[count] = self.set_timer(msg_data.seq_num)
       #if the sck is alr acked
       #shift right 
@@ -102,7 +109,7 @@ class SelectiveRepeat:
       if msg_data.seq_num in range(self.receiver_base, self.receiver_base + config.WINDOW_SIZE):
         self.msg_handler(msg_data.payload)
         self.network_layer.send(ack_pkt)
-        self.receiver_last_ack = ack_pkt
+        #self.receiver_last_ack = ack_pkt
         util.log("Sent ACK: " + util.pkt_to_string(util.extract_data(ack_pkt)))
         count = (msg_data.seq_num - self.receiver_base)% config.WINDOW_SIZE
         self.rcv[count] = True 
@@ -118,7 +125,9 @@ class SelectiveRepeat:
       #not received, please buffer
       elif msg_data.seq_num < self.receiver_base:
         self.network_layer.send(ack_pkt)
+        util.log("packet is outside the receiver window")
         util.log("sent ACK Packet")
+        util.log("Sent ACK: " + util.pkt_to_string(util.extract_data(ack_pkt)))
 
 
 
