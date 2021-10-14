@@ -80,10 +80,9 @@ def get_transport_layer_by_name(name, local_port, remote_port, msg_handler):
   if name == 'gbn':
     return gbn.GoBackN(local_port, remote_port, msg_handler)
 
-  #TODO: modify this part
   #sr protocol
   if name == 'sr':
-    pass
+    return sr.SelectiveRepeat(local_port,remote_port,msg_handler)
 
 
 def now():
