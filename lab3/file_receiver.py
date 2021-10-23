@@ -20,6 +20,7 @@ if __name__ == '__main__':
   transport_layer = None
   transport_layer_name = sys.argv[1]
   file_name = sys.argv[2]
+  
   # assert os.path.exists(file_name)
   file_handle = None
   try:

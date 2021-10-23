@@ -17,13 +17,13 @@ class SelectiveRepeat:
         self.msg_handler = msg_handler
         self.sender_base = 0
         self.next_sequence_number = 0
-        self.timer = [self.set_timer(-1)] * config.WINDOW_SIZE
-        self.has_acked = [False] * config.WINDOW_SIZE
+        self.timer_list = [self.set_timer(-1)] * config.WINDOW_SIZE
+        self.ack_list = [False] * config.WINDOW_SIZE
         self.sender_buffer = [b''] * config.WINDOW_SIZE
         self.receiver_last_ack = b''
         self.is_receiver = True
         self.receiver_base = 0
-        self.rcv_window = [False] * config.WINDOW_SIZE
+        self.rcv_list = [False] * config.WINDOW_SIZE
         self.rcv_buffer = [b''] * config.WINDOW_SIZE
         self.sender_lock = threading.Lock()
 
@@ -53,11 +53,12 @@ class SelectiveRepeat:
         if self.next_sequence_number < self.sender_base + config.WINDOW_SIZE:
             packet_offset_index = (self.next_sequence_number -
                                    self.sender_base) % config.WINDOW_SIZE
+            print(packet_offset_index)
             self.sender_buffer[packet_offset_index] = packet
-            self.has_acked[packet_offset_index] = False
-            self.timer[packet_offset_index] = self.set_timer(
+            self.ack_list[packet_offset_index] = False
+            self.timer_list[packet_offset_index] = self.set_timer(
                 self.next_sequence_number)
-            self.timer[packet_offset_index].start()
+            self.timer_list[packet_offset_index].start()
             self.next_sequence_number += 1
         else:
             pass
@@ -77,24 +78,29 @@ class SelectiveRepeat:
             self.sender_lock.acquire()
             packet_offset_index = (msg_data.seq_num -
                                    self.sender_base) % config.WINDOW_SIZE
-            self.has_acked[packet_offset_index] = True
+            print(packet_offset_index)
+            self.ack_list[packet_offset_index] = True
+            print('sender cancel timer after receiving ack')
 
             util.log("Received ACK with seq #" + util.pkt_to_string(msg_data) +
                      ". Cancelling timer.")
-            self.timer[packet_offset_index].cancel()
-            self.timer[packet_offset_index] = self.set_timer(
+            self.timer_list[packet_offset_index].cancel()
+            self.timer_list[packet_offset_index] = self.set_timer(
                 msg_data.seq_num)
+
+            for timer in self.timer_list:
+                print(timer.is_alive())
 
             # check if the packet right after sendbase is ack'd
             # if yes, move sendbase
             # update the arrays (timer_list, ack_list) accordingly
             # by removing first element, and add empty timer, and False ack
             try:
-                while self.has_acked[0] == True:
+                while self.ack_list[0] == True:
                     self.sender_base += 1
                     util.log(f"Updated send base to {self.sender_base}")
-                    self.has_acked = self.has_acked[1:] + [False]
-                    self.timer = self.timer[1:] + [
+                    self.ack_list = self.ack_list[1:] + [False]
+                    self.timer_list = self.timer_list[1:] + [
                         self.set_timer(-1)
                     ]
                     self.sender_buffer = self.sender_buffer[1:] + [b'']
@@ -119,7 +125,7 @@ class SelectiveRepeat:
                          util.pkt_to_string(util.extract_data(ack_pkt)))
                 packet_offset_index = (msg_data.seq_num -
                                        self.receiver_base) % config.WINDOW_SIZE
-                self.rcv_window[packet_offset_index] = True
+                self.rcv_list[packet_offset_index] = True
 
                 if msg_data.seq_num != self.receiver_base:
                     # Append the payload
@@ -128,10 +134,10 @@ class SelectiveRepeat:
                 else:
                     # Append the payload
                     self.rcv_buffer[packet_offset_index] = msg_data.payload
-                    while self.rcv_window[0] == True:
+                    while self.rcv_list[0] == True:
                         self.msg_handler(self.rcv_buffer[0])
                         self.receiver_base += 1
-                        self.rcv_window = self.rcv_window[1:] + [False]
+                        self.rcv_list = self.rcv_list[1:] + [False]
                         self.rcv_buffer = self.rcv_buffer[1:] + [b'']
                         util.log(
                             f"Updated receiver base to {self.receiver_base}")
@@ -151,7 +157,8 @@ class SelectiveRepeat:
     # Cleanup resources.
     def shutdown(self):
         if not self.is_receiver: self._wait_for_last_ACK()
-        for timer in self.timer:
+        for timer in self.timer_list:
+            print(timer.is_alive())
             if timer.is_alive(): timer.cancel()
         util.log("Connection shutting down...")
         self.network_layer.shutdown()
@@ -166,12 +173,12 @@ class SelectiveRepeat:
         util.log(f"Timeout! Resending packet {seq_num}")
         self.sender_lock.acquire()
         packet_offset_index = (seq_num - self.sender_base) % config.WINDOW_SIZE
-        self.timer[packet_offset_index].cancel()
-        self.timer[packet_offset_index] = self.set_timer(seq_num)
+        self.timer_list[packet_offset_index].cancel()
+        self.timer_list[packet_offset_index] = self.set_timer(seq_num)
         pkt = self.sender_buffer[packet_offset_index]
         self.network_layer.send(pkt)
         util.log("Resending packet: " +
                  util.pkt_to_string(util.extract_data(pkt)))
-        self.timer[packet_offset_index].start()
+        self.timer_list[packet_offset_index].start()
         self.sender_lock.release()
         return
