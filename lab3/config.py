@@ -7,6 +7,7 @@ BIT_ERROR_PROB = 0.1
 MSG_LOST_PROB = 0.1
 
 # Parameters for transport protocols.
+#vary the timeout also
 TIMEOUT_MSEC = 100
 WINDOW_SIZE = 10
 
