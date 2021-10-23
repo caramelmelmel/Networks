@@ -1,0 +1,21 @@
+
+DELETE  http://127.0.0.1/127.0.0.1/user/615dd6b4a18f3445b46f5520 HTTP/1.1
+password: savemysoul
+
+## Delete in batches
+DELETE  http://127.0.0.1/deleteuserbatch HTTP/1.1
+Content-Type: application/json
+password: savemysoul
+
+{
+    "score": 50
+}
+
+## Delete in batches
+DELETE  http://127.0.0.1/deleteuserbatch HTTP/1.1
+Content-Type: application/json
+password: savemysoul
+
+{
+    "name": "Oka is my bro"
+}
